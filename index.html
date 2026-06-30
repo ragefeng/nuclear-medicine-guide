@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>核医学科检查流程指南</title>
+    <style>
+        /* 全局基础样式 */
+        :root {
+            --primary-color: #2b5c8f;    /* 医疗深蓝色 */
+            --secondary-color: #0d9488;  /* 蓝绿色调 */
+            --bg-color: #f4f6f9;         /* 浅灰底色 */
+            --text-dark: #333333;        /* 主要文字 */
+            --text-muted: #666666;      /* 次要文字 */
+            --text-light: #999999;      /* 提示文字 */
+            --accent-color: #e11d48;    /* 警告/重要提示红 */
+        }
+
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bg-color);
+            color: var(--text-dark);
+            -webkit-font-smoothing: antialiased;
+            line-height: 1.5;
+        }
+
+        /* 顶部导航与横幅 */
+        .header {
+            background-color: var(--primary-color);
+            color: white;
+            text-align: center;
+            padding: 40px 20px 30px;
+            position: relative;
+        }
+        .header .hospital-title {
+            font-size: 13px;
+            font-weight: 400;
+            letter-spacing: 1px;
+            opacity: 0.9;
+            margin: 0 0 8px 0;
+        }
+        .header .page-title {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 0 0 10px 0;
+            letter-spacing: 0.5px;
+        }
+        .header .subtitle {
+            font-size: 13px;
+            opacity: 0.8;
+            margin: 0;
+        }
+
+        /* 主体页面容器 */
+        .container {
+            padding: 16px;
+            max-width: 540px;
+            margin: -15px auto 0;
+            position: relative;
+            z-index: 2;
+        }
+
+        /* 统一卡片基础 */
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px 16px;
+            margin-bottom: 14px;
+            box-shadow: 0 4px 16px rgba(43, 92, 143, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        /* 简介/总览卡片 */
+        .intro-card {
+            text-align: center;
+            border-bottom: 4px solid var(--secondary-color);
+        }
+        .intro-icon {
+            width: 50px;
+            height: 50px;
+            background-color: rgba(13, 148, 136, 0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 12px;
+        }
+        .intro-icon svg {
+            width: 26px;
+            height: 26px;
+            fill: var(--secondary-color);
+        }
+        .intro-card p {
+            margin: 4px 0;
+            font-size: 15px;
+        }
+        .intro-card p strong {
+            color: var(--primary-color);
+            font-size: 18px;
+        }
+        .intro-card .hint-text {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-top: 8px;
+        }
+
+        /* 步骤列表样式（折叠面板式） */
+        .step-card {
+            padding: 0;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        
+        /* 步骤头部区 */
+        .step-header {
+            display: flex;
+            align-items: center;
+            padding: 18px 16px;
+            user-select: none;
+        }
+        
+        .step-number {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background-color: rgba(43, 92, 143, 0.1);
+            color: var(--primary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+            margin-right: 12px;
+            flex-shrink: 0;
+        }
+        
+        .step-info {
+            flex-grow: 1;
+        }
+        
+        .step-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin: 0 0 3px 0;
+            color: #222;
+        }
+        
+        .step-summary {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 0;
+        }
+
+        .step-arrow {
+            width: 20px;
+            height: 20px;
+            fill: #ccc;
+            transition: transform 0.3s ease;
+            margin-left: 8px;
+            flex-shrink: 0;
+        }
+
+        /* 展开的详细内容区 */
+        .step-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); /* 平滑手风琴效果 */
+            background-color: #fafbfc;
+            border-top: 1px solid #f0f2f5;
+        }
+        
+        .step-content-inner {
+            padding: 16px;
+            font-size: 14px;
+            color: #444;
+            line-height: 1.6;
+        }
+
+        /* 区分进行中或激活状态 */
+        .step-card.active {
+            border-left: 4px solid var(--primary-color);
+        }
+        .step-card.active .step-number {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        .step-card.active .step-arrow {
+            transform: rotate(90deg);
+            fill: var(--primary-color);
+        }
+        .step-card.active .step-content {
+            max-height: 2000px; /* 足够容纳展开高度 */
+            transition: max-height 0.5s cubic-bezier(1, 0, 1, 0);
+        }
+
+        /* 结构化的内部列表和贴士 */
+        .info-list {
+            margin: 0 0 10px 0;
+            padding-left: 20px;
+        }
+        .info-list li {
+            margin-bottom: 6px;
+        }
+        .badge-warn {
+            background-color: rgba(225, 29, 72, 0.1);
+            color: var(--accent-color);
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: bold;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+        .notice-box {
+            background-color: #fff2e8;
+            border-left: 3px solid #ff7a45;
+            padding: 10px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-top: 8px;
+            color: #d4380d;
+        }
+
+        /* 二维码分享卡片 */
+        .qr-card {
+            text-align: center;
+            padding: 24px 16px;
+        }
+        .qr-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .qr-title svg {
+            width: 18px;
+            height: 18px;
+            fill: var(--primary-color);
+        }
+        .qr-code {
+            width: 160px;
+            height: 160px;
+            margin: 0 auto 14px;
+            background-color: #eee;
+            border: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        /* 用SVG绘制一个高仿真二维码样式占位，避免白屏 */
+        .qr-code svg {
+            width: 140px;
+            height: 140px;
+        }
+        .qr-tip {
+            font-size: 12px;
+            color: var(--text-muted);
+            margin: 2px 0;
+        }
+
+        /* 页脚免责及版权 */
+        .footer {
+            text-align: center;
+            padding: 20px 20px 40px;
+            font-size: 12px;
+            color: var(--text-light);
+            line-height: 1.8;
+        }
+        .footer p {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 顶部横幅 -->
+    <header class="header">
+        <div class="hospital-title">上海交通大学医学院附属第九人民医院 · 核医学科</div>
+        <div class="page-title">核医学检查流程指南</div>
+        <div class="subtitle">精准分子影像 · 科学安全诊疗</div>
+    </header>
+
+    <!-- 主体容器 -->
+    <main class="container">
+
+        <!-- 总览卡片 -->
+        <div class="card intro-card">
+            <div class="intro-icon">
+                <svg viewBox="0 0 24 24">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-2 10h-4v4h-2v-4H7v-2h4V7h2v4h4v2z"/>
+                </svg>
+            </div>
+            <p>核医学检查（如 PET/CT、骨显像）共 <strong>6</strong> 个主要步骤</p>
+            <p>请按指引顺序配合完成</p>
+            <div class="hint-text">💡 点击各步骤卡片可展开查看详细的检前准备与要求</div>
+        </div>
+
+        <!-- 步骤 1 -->
+        <div class="card step-card" onclick="toggleStep(this)">
+            <div class="step-header">
+                <div class="step-number">1</div>
+                <div class="step-info">
+                    <h3 class="step-title">预约登记与审核</h3>
+                    <p class="step-summary">出示申请单 → 核对身高体重 → 确认具体时间</p>
+                </div>
+                <svg class="step-arrow" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </div>
+            <div class="step-content">
+                <div class="step-content-inner">
+                    <ul class="info-list">
+                        <li><strong>现场确认：</strong> 携带临床医生开具的核医学检查申请单至核医学科登记窗口。</li>
+                        <li><strong>基础数据采集：</strong> 工作人员需精准测量您的<strong>身高与当前体重</strong>，这直接决定了后续显像剂的精确注射注射剂量。</li>
+                        <li><strong>严格准时：</strong> 由于核医学检查所用的放射性药物具有半衰期且多为当天专人订制，请务必严格按照预约的具体时间段到院，迟到可能导致无法检查。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤 2 -->
+        <div class="card step-card" onclick="toggleStep(this)">
+            <div class="step-header">
+                <div class="step-number">2</div>
+                <div class="step-info">
+                    <h3 class="step-title">检查前关键准备</h3>
+                    <p class="step-summary">空腹要求 → 停药控糖 → 穿着要求</p>
+                </div>
+                <svg class="step-arrow" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </div>
+            <div class="step-content">
+                <div class="step-content-inner">
+                    <span class="badge-warn">🚨 极其重要！不合要求将影响诊断或重新预约</span>
+                    <ul class="info-list">
+                        <li><strong>饮食控制（PET/CT）：</strong> 检查前需<strong>完全空腹至少 6 小时</strong>（禁食、禁含糖饮料、禁输注葡萄糖）。可适量饮用纯清水。</li>
+                        <li><strong>避开高糖：</strong> 检查前一天请进食低碳水化合物、高蛋白质食物，避免剧烈运动。</li>
+                        <li><strong>特殊项目停药：</strong> 
+                            <ul>
+                                <li><strong>甲状腺显像：</strong> 检查前需遵医嘱停用含碘药物、海带紫菜等食物 2-4 周。</li>
+                                <li><strong>糖尿病患者：</strong> 需提前向科室说明，控制血糖在理想范围（通常要求空腹血糖值 &lt; 11.1 mmol/L）。</li>
+                            </ul>
+                        </li>
+                        <li><strong>衣着穿戴：</strong> 请穿着宽松、舒适、<strong>无金属配件</strong>（如金属拉链、扣子、亮片）的衣物。检查前需摘除项链、钥匙、假牙及手机等。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤 3 -->
+        <div class="card step-card" onclick="toggleStep(this)">
+            <div class="step-header">
+                <div class="step-number">3</div>
+                <div class="step-info">
+                    <h3 class="step-title">显像剂静脉注射</h3>
+                    <p class="step-summary">建立静脉通道 → 精准剂量注射</p>
+                </div>
+                <svg class="step-arrow" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </div>
+            <div class="step-content">
+                <div class="step-content-inner">
+                    <ul class="info-list">
+                        <li><strong>安全问询：</strong> 注射前护士会再次核对您的基本信息及妊娠/哺乳哺乳史（孕妇非必要不建议做此检查）。</li>
+                        <li><strong>药物注射：</strong> 在专用的屏蔽注射室内，通过静脉留置针为您注入微量的放射性示踪药物（如 <sup>18</sup>F-FDG ）。</li>
+                        <li><strong>无需恐慌：</strong> 注射剂量极小，无药物过敏反应，对人体产生的辐射均在国际安全可控范围。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤 4 -->
+        <div class="card step-card" onclick="toggleStep(this)">
+            <div class="step-header">
+                <div class="step-number">4</div>
+                <div class="step-info">
+                    <h3 class="step-title">注射后静候摄取</h3>
+                    <p class="step-summary">专用休息室避光休息 → 闭目放松50-60分钟</p>
+                </div>
+                <svg class="step-arrow" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </div>
+            <div class="step-content">
+                <div class="step-content-inner">
+                    <ul class="info-list">
+                        <li><strong>绝对安静：</strong> 注射后请在指定的单人或隔离休息室内闭目静坐或平卧放松，<strong>期间请勿刷手机、看书、交谈或随意走动</strong>。因为肌肉活动和大脑思考会导致药物错误聚集在对应区域，干扰病灶诊断。</li>
+                        <li><strong>多喝清水：</strong> 遵医嘱在休息期间适量饮用提供的纯净水（约 500-1000 毫升），以协助多余药物的清除并充盈胃肠道。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤 5 -->
+        <div class="card step-card" onclick="toggleStep(this)">
+            <div class="step-header">
+                <div class="step-number">5</div>
+                <div class="step-info">
+                    <h3 class="step-title">上机显像扫描</h3>
+                    <p class="step-summary">排尽尿液 → 平卧扫描 → 耗时约15-30分钟</p>
+                </div>
+                <svg class="step-arrow" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </div>
+            <div class="step-content">
+                <div class="step-content-inner">
+                    <ul class="info-list">
+                        <li><strong>临考排尿：</strong> 临上机前，请遵照医生指引前往专用厕所<strong>彻底排尽尿液</strong>，避免膀胱区药物过浓遮挡盆腔病灶。注意切勿让尿液沾染衣物或皮肤。</li>
+                        <li><strong>静止平卧：</strong> 仰卧于检查床上，扫描期间身体<strong>千万不能移动</strong>，配合技师口令屏气（若需要）。移动会产生重影（伪影），导致图像报废。</li>
+                        <li><strong>延迟扫描：</strong> 部分患者因体内药物代谢较慢，可能需要在首次扫描结束后等待一段时间进行“延迟显像”，请听从通知，切勿擅自离开。</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <!-- 步骤 6 -->
+        <div class="card step-card" onclick="toggleStep(this)">
+            <div class="step-header">
+                <div class="step-number">6</div>
+                <div class="step-info">
+                    <h3 class="step-title">检查后注意事项</h3>
+                    <p class="step-summary">多饮水多排尿 → 24小时内远离特殊人群</p>
+                </div>
+                <svg class="step-arrow" viewBox="0 0 24 24"><path d="M8.59 16.59L13.17 12 8.59 7.41 10 6l6 6-6 6-1.41-1.41z"/></svg>
+            </div>
+            <div class="step-content">
+                <div class="step-content-inner">
+                    <ul class="info-list">
+                        <li><strong>加速代谢：</strong> 检查结束后请<strong>多喝水、多排尿</strong>，残留体内的微量放射性示踪剂会通过尿液迅速排出体外。</li>
+                        <li><strong>辐射安全距离：</strong> 检查后 <strong>24 小时内</strong>，请尽量避免紧密接触<strong>孕妇及婴幼儿</strong>。保持 1-2 米以上的安全距离。</li>
+                        <li><strong>暂停哺乳：</strong> 哺乳期女性进行检查后，应当暂停母乳喂养 24 小时，期间乳汁吸出倒弃。</li>
+                    </ul>
+                    <div class="notice-box">
+                        <strong>📌 报告领取：</strong> 检查完成 24-48 小时后，您可在医院自助取片机上打印纸质报告，或关注官方微信公众号查询电子报告。
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 二维码区 -->
+        <div class="card qr-card">
+            <div class="qr-title">
+                <svg viewBox="0 0 24 24"><path d="M4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm16-4H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H8V4h12v12z"/></svg>
+                扫码保存或分享本指南
+            </div>
+            <div class="qr-code">
+                <!-- 高仿真实矩阵式二维码SVG，非空白 -->
+                <svg viewBox="0 0 100 100">
+                    <rect x="0" y="0" width="25" height="25" fill="#2b5c8f"/>
+                    <rect x="5" y="5" width="15" height="15" fill="white"/>
+                    <rect x="75" y="0" width="25" height="25" fill="#2b5c8f"/>
+                    <rect x="80" y="5" width="15" height="15" fill="white"/>
+                    <rect x="0" y="75" width="25" height="25" fill="#2b5c8f"/>
+                    <rect x="5" y="80" width="15" height="15" fill="white"/>
+                    <rect x="35" y="10" width="10" height="10" fill="#333"/>
+                    <rect x="55" y="25" width="15" height="10" fill="#333"/>
+                    <rect x="30" y="45" width="20" height="15" fill="#2b5c8f"/>
+                    <rect x="65" y="50" width="15" height="25" fill="#333"/>
+                    <rect x="45" y="75" width="20" height="10" fill="#333"/>
+                    <circle cx="50" cy="50" r="6" fill="#0d9488"/>
+                </svg>
+            </div>
+            <p class="qr-tip">手机端长按页面可保存为书签</p>
+            <p class="qr-tip">转发给家属，提前做好各项准备</p>
+        </div>
+
+    </main>
+
+    <!-- 页脚声明 -->
+    <footer class="footer">
+        <p>上海交通大学医学院附属第九人民医院· 核医学科 版权所有</p>
+        <p>本指南仅供就医流程参考，具体请以医护人员现场医嘱为准</p>
+        <p>如有疑问请拨打科室热线咨询：021-XXXX-XXXX</p>
+    </footer>
+
+    <!-- 折叠交互JavaScript逻辑 -->
+    <script>
+        function toggleStep(cardElement) {
+            // 如果点击的已经是激活的，就关闭它
+            if (cardElement.classList.contains('active')) {
+                cardElement.classList.remove('active');
+            } else {
+                // 先关闭其他所有已经打开的卡片（手风琴独占式体验）
+                const allCards = document.querySelectorAll('.step-card');
+                allCards.forEach(card => card.classList.remove('active'));
+                
+                // 激活当前被点击的卡片
+                cardElement.classList.add('active');
+                
+                // 自动平滑滚动到当前可见区域，体验更好
+                setTimeout(() => {
+                    cardElement.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+                }, 200);
+            }
+        }
+
+        // 默认让第一步或者导言卡片有一个醒目的初始化动作（这里默认闭合，由用户点开）
+    </script>
+</body>
+</html>
